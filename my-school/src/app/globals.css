@@ -1,0 +1,8 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  color: #0f172a; /* สีตัวหนังสือหลัก: ดำเข้ม (Slate-900) */
+  background-color: #f8fafc; /* สีพื้นหลังเว็บ: ขาวเทาสว่างสบายตา (Slate-50) */
+}

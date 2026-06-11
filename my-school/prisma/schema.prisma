@@ -1,0 +1,100 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String       @id @default(cuid())
+  email            String       @unique
+  passwordHash     String
+  firstName        String
+  lastName         String
+  role             String       @default("STUDENT") 
+  studentId        String?      @unique
+  createdAt        DateTime     @default(now())
+
+  // ติดป้ายชื่อแยกความสัมพันธ์ชัดเจน ป้องกันการสับสนของฐานข้อมูล
+  coursesTeaching  Course[]     @relation("TeacherCourses")
+  enrollments      Enrollment[] @relation("StudentEnrollments")
+  gradesReceived   Grade[]      @relation("StudentGrades")
+  gradesGiven      Grade[]      @relation("TeacherGrades")
+  attendances      Attendance[] @relation("StudentAttendances")
+  attendancesGiven Attendance[] @relation("TeacherAttendances")
+  payments         Payment[]    @relation("StudentPayments")
+  sentMessages     Message[]    @relation("SentMessages")
+  receivedMessages Message[]    @relation("ReceivedMessages")
+}
+
+model Course {
+  id          String       @id @default(cuid())
+  name        String
+  code        String       @unique
+  teacherId   String
+  teacher     User         @relation("TeacherCourses", fields: [teacherId], references: [id])
+  enrollments Enrollment[]
+  grades      Grade[]
+  attendances Attendance[]
+}
+
+model Enrollment {
+  id        String   @id @default(cuid())
+  studentId String
+  student   User     @relation("StudentEnrollments", fields: [studentId], references: [id])
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id])
+  semester  String
+  status    String   @default("PENDING") 
+  @@unique([studentId, courseId, semester])
+}
+
+model Grade {
+  id        String   @id @default(cuid())
+  studentId String
+  student   User     @relation("StudentGrades", fields: [studentId], references: [id])
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id])
+  teacherId String
+  teacher   User     @relation("TeacherGrades", fields: [teacherId], references: [id])
+  score     Float
+  maxScore  Float
+  semester  String
+  @@unique([studentId, courseId, semester])
+}
+
+model Attendance {
+  id        String   @id @default(cuid())
+  studentId String
+  student   User     @relation("StudentAttendances", fields: [studentId], references: [id])
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id])
+  teacherId String
+  teacher   User     @relation("TeacherAttendances", fields: [teacherId], references: [id])
+  date      DateTime @default(now())
+  status    String   
+  @@unique([studentId, courseId, date])
+}
+
+model Payment {
+  id          String   @id @default(cuid())
+  studentId   String
+  student     User     @relation("StudentPayments", fields: [studentId], references: [id])
+  amount      Float
+  description String
+  slipUrl     String?
+  status      String   @default("PENDING") 
+  createdAt   DateTime @default(now())
+}
+
+model Message {
+  id         String   @id @default(cuid())
+  senderId   String
+  sender     User     @relation("SentMessages", fields: [senderId], references: [id])
+  receiverId String
+  receiver   User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  content    String
+  createdAt  DateTime @default(now())
+}
